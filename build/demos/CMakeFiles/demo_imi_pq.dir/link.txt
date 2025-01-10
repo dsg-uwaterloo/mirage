@@ -1,0 +1,1 @@
+/Library/Developer/CommandLineTools/usr/bin/c++ -O3 -DNDEBUG -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX13.0.sdk -mmacosx-version-min=12.5 -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/demo_imi_pq.dir/demo_imi_pq.cpp.o -o demo_imi_pq  -Wl,-rpath,/Users/sairaj/faiss/build/faiss ../faiss/libfaiss.dylib
