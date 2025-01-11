@@ -229,7 +229,11 @@ endif()
 # Export FAISS_HEADERS variable to parent scope.
 set(FAISS_HEADERS ${FAISS_HEADERS} PARENT_SCOPE)
 
-add_library(faiss ${FAISS_SRC})
+add_library(faiss ${FAISS_SRC}
+        IndexMIRAGE.cpp
+        IndexMIRAGE.h
+        impl/MIRAGE.cpp
+        impl/MIRAGE.h)
 
 add_library(faiss_avx2 ${FAISS_SRC})
 if(NOT FAISS_OPT_LEVEL STREQUAL "avx2" AND NOT FAISS_OPT_LEVEL STREQUAL "avx512")
