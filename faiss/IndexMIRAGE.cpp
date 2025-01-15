@@ -6,7 +6,7 @@
 // -*- c++ -*-
 
 #include <omp.h>
-#include <faiss/IndexMirage.h>
+#include <faiss/IndexMIRAGE.h>
 #include <cinttypes>
 #include <cstdio>
 #include <cstdlib>

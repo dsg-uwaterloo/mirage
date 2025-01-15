@@ -80,6 +80,7 @@ set(FAISS_SRC
   invlists/DirectMap.cpp
   invlists/InvertedLists.cpp
   invlists/InvertedListsIOHook.cpp
+  invlists/OnDiskInvertedLists.cpp # if running windows remove
   utils/Heap.cpp
   utils/WorkerThread.cpp
   utils/distances.cpp
@@ -182,6 +183,7 @@ set(FAISS_HEADERS
   invlists/DirectMap.h
   invlists/InvertedLists.h
   invlists/InvertedListsIOHook.h
+  invlists/OnDiskInvertedLists.h # if running windows remove
   utils/AlignedTable.h
   utils/Heap.h
   utils/WorkerThread.h

@@ -13,6 +13,7 @@ This implementation of the MIRAGE index is built on [**The FAISS Library**](http
 
 ## Compilation
 ```
+rm -rf build
 cmake -DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=OFF -DBUILD_TESTING=ON -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release -B build
 make -C build -j faiss
 make -C build demo_mirage
@@ -47,4 +48,8 @@ index.add(nb, database.data());
 index.search(nq, queries.data(), k, dis.data(), nns.data());
 ```
 
-For details on testing MIRAGE on the dataset of your choice, please look at other example files such as demos/demo_sift1M.cpp for reading data in the fvecs/ivecs format.
+For details on testing MIRAGE on the dataset of your choice, please look at other example files such as
+```
+demos/demo_sift1M.cpp 
+```
+for reading data in the fvecs/ivecs format.
