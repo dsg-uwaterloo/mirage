@@ -1,32 +1,6 @@
 /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/Applications/CLion.app/Contents/bin/ninja/mac/aarch64/ninja -DCMAKE_C_COMPILER=/opt/homebrew/opt/llvm/bin/clang -DCMAKE_CXX_COMPILER=/opt/homebrew/opt/llvm/bin/clang++ -B build -DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=OFF -DCMAKE_BUILD_TYPE=Release -G Ninja -S /Users/sairaj/faiss -B /Users/sairaj/faiss/cmake-build-debug
--- The CXX compiler identification is Clang 19.1.6
--- Detecting CXX compiler ABI info
--- Detecting CXX compiler ABI info - done
--- Check for working CXX compiler: /opt/homebrew/opt/llvm/bin/clang++ - skipped
--- Detecting CXX compile features
--- Detecting CXX compile features - done
--- Found OpenMP_CXX: -fopenmp=libomp (found version "5.1") 
--- Found OpenMP: TRUE (found version "5.1")  
--- Performing Test CMAKE_HAVE_LIBC_PTHREAD
--- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
--- Found Threads: TRUE  
 -- Could NOT find MKL (missing: MKL_LIBRARIES) 
--- Looking for sgemm_
--- Looking for sgemm_ - not found
--- Looking for dgemm_
--- Looking for dgemm_ - found
--- Found BLAS: /Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk/System/Library/Frameworks/Accelerate.framework  
--- Looking for cheev_
--- Looking for cheev_ - found
--- Found LAPACK: /Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk/System/Library/Frameworks/Accelerate.framework;-lm;-ldl  
--- The C compiler identification is Clang 19.1.6
--- Detecting C compiler ABI info
--- Detecting C compiler ABI info - done
--- Check for working C compiler: /opt/homebrew/opt/llvm/bin/clang - skipped
--- Detecting C compile features
--- Detecting C compile features - done
--- Found Python: /opt/homebrew/Frameworks/Python.framework/Versions/3.13/bin/python3.13 (found version "3.13.1") found components: Interpreter 
--- Configuring done (3.3s)
+-- Configuring done (0.5s)
 -- Generating done (0.0s)
 -- Build files have been written to: /Users/sairaj/faiss/cmake-build-debug
 

@@ -212,6 +212,25 @@ rule CXX_EXECUTABLE_LINKER__demo_residual_quantizer_Release
 #############################################
 # Rule for compiling CXX files.
 
+rule CXX_COMPILER__demo_mirage_unscanned_Release
+  depfile = $DEP_FILE
+  deps = gcc
+  command = ${LAUNCHER}${CODE_CHECK}/opt/homebrew/opt/llvm/bin/clang++ $DEFINES $INCLUDES $FLAGS -MD -MT $out -MF $DEP_FILE -o $out -c $in
+  description = Building CXX object $out
+
+
+#############################################
+# Rule for linking CXX executable.
+
+rule CXX_EXECUTABLE_LINKER__demo_mirage_Release
+  command = $PRE_LINK && /opt/homebrew/opt/llvm/bin/clang++ $FLAGS -Wl,-search_paths_first -Wl,-headerpad_max_install_names $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES && $POST_BUILD
+  description = Linking CXX executable $TARGET_FILE
+  restat = $RESTAT
+
+
+#############################################
+# Rule for compiling CXX files.
+
 rule CXX_COMPILER__bench_ivf_selector_unscanned_Release
   depfile = $DEP_FILE
   deps = gcc

@@ -50,6 +50,7 @@
 /Users/sairaj/faiss/cmake-build-debug/demos/CMakeFiles/demo_sift1M.dir
 /Users/sairaj/faiss/cmake-build-debug/demos/CMakeFiles/demo_weighted_kmeans.dir
 /Users/sairaj/faiss/cmake-build-debug/demos/CMakeFiles/demo_residual_quantizer.dir
+/Users/sairaj/faiss/cmake-build-debug/demos/CMakeFiles/demo_mirage.dir
 /Users/sairaj/faiss/cmake-build-debug/demos/CMakeFiles/test.dir
 /Users/sairaj/faiss/cmake-build-debug/demos/CMakeFiles/edit_cache.dir
 /Users/sairaj/faiss/cmake-build-debug/demos/CMakeFiles/rebuild_cache.dir
