@@ -219,7 +219,7 @@ struct HNSW {
     void print_neighbor_stats(int level) const;
 
     int prepare_level_tab(size_t n, bool preset_levels = false);
-
+    int prepare_level_tab_mirage(size_t n, bool preset_levels = false);
     static void shrink_neighbor_list(
             DistanceComputer& qdis,
             std::priority_queue<NodeDistFarther>& input,

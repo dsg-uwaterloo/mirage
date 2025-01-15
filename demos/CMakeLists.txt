@@ -4,7 +4,8 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-add_executable(demo_imi_flat EXCLUDE_FROM_ALL demo_imi_flat.cpp)
+add_executable(demo_imi_flat EXCLUDE_FROM_ALL demo_imi_flat.cpp
+        demo_imi_flat.cpp)
 target_link_libraries(demo_imi_flat PRIVATE faiss)
 
 add_executable(demo_imi_pq EXCLUDE_FROM_ALL demo_imi_pq.cpp)
@@ -24,3 +25,7 @@ target_link_libraries(demo_weighted_kmeans PRIVATE faiss)
 
 add_executable(demo_residual_quantizer EXCLUDE_FROM_ALL demo_residual_quantizer.cpp)
 target_link_libraries(demo_residual_quantizer PRIVATE faiss)
+
+add_executable(demo_mirage EXCLUDE_FROM_ALL demo_mirage.cpp
+        demo_mirage.cpp)
+target_link_libraries(demo_mirage PRIVATE faiss)

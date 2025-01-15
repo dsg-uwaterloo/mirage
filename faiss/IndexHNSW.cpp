@@ -498,7 +498,7 @@ void IndexHNSW::init_level_0_from_knngraph(
 
 #pragma omp parallel for
     for (idx_t i = 0; i < ntotal; i++) {
-        DistanceComputer* qdis = storage_distance_computer(storage);
+        std::unique_ptr<DistanceComputer> qdis(storage_distance_computer(storage));
         std::vector<float> vec(d);
         storage->reconstruct(i, vec.data());
         qdis->set_query(vec.data());

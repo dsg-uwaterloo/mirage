@@ -221,6 +221,18 @@ set(FAISS_HEADERS
   utils/hamming_distance/avx2-inl.h
 )
 
+add_library(faiss ${FAISS_SRC}
+        IndexMIRAGE.cpp
+        impl/MIRAGE.cpp
+        IndexMIRAGE.h
+        impl/MIRAGE.h)
+
+#add_library(faiss ${FAISS_HEADERS}
+        #IndexMIRAGE.h
+        #impl/MIRAGE.h)
+
+
+
 if(NOT WIN32)
   list(APPEND FAISS_SRC invlists/OnDiskInvertedLists.cpp)
   list(APPEND FAISS_HEADERS invlists/OnDiskInvertedLists.h)
@@ -228,12 +240,6 @@ endif()
 
 # Export FAISS_HEADERS variable to parent scope.
 set(FAISS_HEADERS ${FAISS_HEADERS} PARENT_SCOPE)
-
-add_library(faiss ${FAISS_SRC}
-        IndexMIRAGE.cpp
-        IndexMIRAGE.h
-        impl/MIRAGE.cpp
-        impl/MIRAGE.h)
 
 add_library(faiss_avx2 ${FAISS_SRC})
 if(NOT FAISS_OPT_LEVEL STREQUAL "avx2" AND NOT FAISS_OPT_LEVEL STREQUAL "avx512")

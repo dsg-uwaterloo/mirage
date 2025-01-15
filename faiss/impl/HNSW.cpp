@@ -221,6 +221,28 @@ int HNSW::prepare_level_tab(size_t n, bool preset_levels) {
     return max_level;
 }
 
+int HNSW::prepare_level_tab_mirage(size_t n, bool preset_levels) {
+    // TODO: Modify for dynamic inserts
+    size_t n0 = 0; // for now without dynamic inserts
+    for (int i = 0; i < n; i++) {
+        int pt_level = random_level();
+        levels.push_back(pt_level + 1);
+    }
+
+    int max_level = 0;
+    for (int i = 0; i < n; i++) {
+        int pt_level = levels[i + n0] - 1;
+        if (pt_level > max_level)
+            max_level = pt_level;
+        //printf("Offsets Before: %d , Neighbors Before: %d\n ", offsets.size(), neighbors.size());
+        offsets.push_back(offsets.back() + cum_nb_neighbors(pt_level + 1));
+        neighbors.resize(offsets.back(), -1);
+        //printf("Offsets After: %d , Neighbors After: %d\n ", offsets.size(), neighbors.size());
+    }
+
+    return max_level;
+}
+
 /** Enumerate vertices from nearest to farthest from query, keep a
  * neighbor only if there is no previous neighbor that is closer to
  * that vertex than the query.
@@ -494,7 +516,7 @@ void HNSW::add_with_locks(
         greedy_update_nearest(*this, ptdis, level, nearest, d_nearest);
     }
 
-    for (; level >= 0; level--) {
+    for (; level >= 0; level--) { // changed from >= by anon
         add_links_starting_from(
                 ptdis, pt_id, nearest, d_nearest, level, locks.data(), vt);
     }
