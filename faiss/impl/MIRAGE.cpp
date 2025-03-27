@@ -69,62 +69,76 @@ void Mirage::insert_nn(int id, int nn_id, float distance, bool flag) {
 }
 
 void Mirage::update(faiss::DistanceComputer& qdis) {
+
 #pragma omp parallel for schedule(dynamic, 256)
-    for (int u = 0; u < ntotal; ++u) {
-        auto& nhood = graph[u];
-        auto& pool = nhood.pool;
-        std::vector<faiss::nndescent::Neighbor> new_pool;
-        std::vector<faiss::nndescent::Neighbor> old_pool;
-        {
-            std::lock_guard<std::mutex> guard(nhood.lock);
-            old_pool = pool;
-            pool.clear();
-        }
-        std::sort(old_pool.begin(), old_pool.end());
-        old_pool.erase(std::unique(old_pool.begin(), old_pool.end(),
-                                   [](faiss::nndescent::Neighbor& a,
-                                      faiss::nndescent::Neighbor& b) {
-                                       return a.id == b.id;
-                                   }),
-                       old_pool.end());
+   for (int u = 0; u < ntotal; ++u) {
+       auto& nhood = graph[u];
 
-        for (auto&& nn : old_pool) {
-            bool ok = true;
-            for (auto&& other_nn : new_pool) {
-                if (!nn.flag && !other_nn.flag) {
-                    continue;
-                }
-                if (nn.id == other_nn.id) {
-                    ok = false;
-                    break;
-                }
-                float distance = qdis.symmetric_dis(nn.id, other_nn.id);
-                if (distance < nn.distance) {
-                    ok = false;
-                    insert_nn(other_nn.id, nn.id, distance, true);
-                    break;
-                }
-            }
-            if (ok) {
-                new_pool.emplace_back(nn);
-            }
-        }
+       // Swap the pool with a local temporary to reduce lock duration.
+       std::vector<faiss::nndescent::Neighbor> old_pool;
+       {
+           std::lock_guard<std::mutex> guard(nhood.lock);
+           old_pool.swap(nhood.pool);
+       }
 
-        for (auto&& nn : new_pool) {
-            nn.flag = false;
-        }
-        {
-            std::lock_guard<std::mutex> guard(nhood.lock);
-            pool.insert(pool.end(), new_pool.begin(), new_pool.end());
-        }
-    }
+       // Remove duplicates: sort and unique.
+       std::sort(old_pool.begin(), old_pool.end());
+       old_pool.erase(
+               std::unique(old_pool.begin(), old_pool.end(),
+                           [](const faiss::nndescent::Neighbor& a,
+                              const faiss::nndescent::Neighbor& b) {
+                               return a.id == b.id;
+                           }),
+               old_pool.end());
 
+       // Prepare new pool and auxiliary set for fast duplicate checks.
+       std::vector<faiss::nndescent::Neighbor> new_pool;
+       new_pool.reserve(old_pool.size());
+       std::unordered_set<int> new_ids;
 
+       // Process each neighbor from the old pool.
+       for (const auto& nn : old_pool) {
+           // Skip if already added.
+           if (new_ids.find(nn.id) != new_ids.end())
+               continue;
+
+           bool ok = true;
+           // Check against neighbors already in the new pool.
+           for (const auto& other_nn : new_pool) {
+               // If both flags are false, skip distance check.
+               if (!nn.flag && !other_nn.flag)
+                   continue;
+
+               // Compute distance between the two candidates.
+               float distance = qdis.symmetric_dis(nn.id, other_nn.id);
+               if (distance < nn.distance) {
+                   ok = false;
+                   // Insert a reverse edge.
+                   insert_nn(other_nn.id, nn.id, distance, true);
+                   break;
+               }
+           }
+           if (ok) {
+               new_pool.push_back(nn);
+               new_ids.insert(nn.id);
+           }
+       }
+
+       // Mark all new neighbors as processed.
+       for (auto& nn : new_pool)
+           nn.flag = false;
+
+       // Reassign the updated pool.
+       {
+           std::lock_guard<std::mutex> guard(nhood.lock);
+           nhood.pool = std::move(new_pool);
+       }
+   }
 }
 
 void Mirage::add_reverse_edges() {
     std::vector<std::vector<faiss::nndescent::Neighbor>> reverse_pools(ntotal);
-
+int num_reverse_edges = 96;
 #pragma omp parallel for
     for (int u = 0; u < ntotal; ++u) {
         for (auto&& nn : graph[u].pool) {
@@ -132,29 +146,6 @@ void Mirage::add_reverse_edges() {
             reverse_pools[nn.id].emplace_back(u, nn.distance, nn.flag);
         }
     }
-    /*
-    #pragma omp parallel for
-        for (int u = 0; u < ntotal; ++u) {
-            auto& pool = graph[u].pool;
-            for (auto&& nn : pool) {
-                nn.flag = true;
-            }
-            auto& rpool = reverse_pools[u];
-            rpool.insert(rpool.end(), pool.begin(), pool.end());
-            pool.clear();
-            std::sort(rpool.begin(), rpool.end());
-            rpool.erase(std::unique(rpool.begin(), rpool.end(),
-                                    [](faiss::nndescent::Neighbor& a,
-                                       faiss::nndescent::Neighbor& b) {
-                                        return a.id == b.id;
-                                    }),
-                        rpool.end());
-            if (rpool.size() > R) {
-                rpool.resize(R);
-            }
-            pool.swap(rpool);
-        }
-      */
 
 #pragma omp parallel for
     for (int u = 0; u < ntotal; ++u) {
@@ -172,8 +163,8 @@ void Mirage::add_reverse_edges() {
                                     return a.id == b.id;
                                 }),
                     rpool.end());
-        if (rpool.size() > 96) {
-            rpool.resize(96);
+        if (rpool.size() > num_reverse_edges) {
+            rpool.resize(num_reverse_edges);
         }
     }
 
@@ -189,14 +180,14 @@ void Mirage::add_reverse_edges() {
     for (int u = 0; u < ntotal; ++u) {
         auto& pool = graph[u].pool;
         std::sort(pool.begin(), pool.end());
-        if (pool.size() > 96) {
-            pool.resize(96);
+        if (pool.size() > num_reverse_edges) {
+            pool.resize(num_reverse_edges);
         }
     }
 }
 
 void Mirage::build(faiss::DistanceComputer& qdis, const int n,
-                       bool verbose) {
+                   bool verbose) {
     if (verbose) {
         printf("Parameters: S=%d, R=%d, Iter=%d\n", S, R, iter);
     }

@@ -130,58 +130,61 @@ void IndexMirage::add(idx_t n, const float* x) {
 
     if (n0 != 0) {
         printf("Incremental Inserts Detected\n");
-        hierarchy.storage = storage;
-        add_inserts(hierarchy, n0, n, x, verbose, hierarchy.hnsw.levels.size() == ntotal);
+        hierarchy.storage->add(n, x);
+        hierarchy.ntotal = ntotal;
+        add_inserts(hierarchy, n0, n, x, verbose, hierarchy.hnsw.levels.size() == hierarchy.ntotal);
 
     }
 
+   else {
+        std::unique_ptr<DistanceComputer> dis(
+                storage_distance_computer(storage));
 
+        mirage.build(*dis, ntotal, verbose);
 
-   std::unique_ptr<DistanceComputer> dis(storage_distance_computer(storage));
-   mirage.build(*dis, ntotal, verbose);
+        hierarchy.ntotal = n;
+        hierarchy.storage = storage;
+        hierarchy.d = d;
 
-   hierarchy.ntotal = n;
-   hierarchy.storage = storage;
-   hierarchy.d = d;
-
-
-   convert_to_mirage(mirage, hierarchy, *dis, x);
-
+        convert_to_mirage(mirage, hierarchy, *dis, x);
+    }
 }
 
 void IndexMirage::convert_to_mirage(const faiss::Mirage &mirage, faiss::IndexHNSW& hierarchy,
                                                      faiss::DistanceComputer &qdis, const float* x) {
+     int n = mirage.ntotal;
+     int k = mirage.S;
+     add_levels(mirage, hierarchy, x); // add hierarchy first
 
-   int n = mirage.ntotal;
-   int k = mirage.S;
-   add_levels(mirage, hierarchy, x); // add hierarchy first
+     std::vector<float> D(n * k, 0.0f);
+     std::vector<idx_t> I(n * k, -1);
 
-   std::vector<float> D(n * k, 0.0f);
-   std::vector<idx_t> I(n * k, -1);
+ #pragma omp parallel for
+     for (int u = 0; u < n; ++u) {
+         // Create a thread-local instance of the DistanceComputer.
+         std::unique_ptr<DistanceComputer> local_qdis(storage_distance_computer(storage));
+         // Create a thread-local query vector.
+         std::vector<float> local_query_vector(storage->d);
 
+         // Reconstruct the vector for index u and set it for the distance computer.
+         storage->reconstruct(u, local_query_vector.data());
+         local_qdis->set_query(local_query_vector.data());
 
-   // Fill D and I from the final_graph
-   // Temporary storage for the query vector
-   std::vector<float> query_vector(storage->d);
+         int offset = mirage.offsets[u];
+         int degree = mirage.offsets[u + 1] - offset;
 
-   for (int u = 0; u < n; ++u) {
-       int offset = mirage.offsets[u];
-       int degree = mirage.offsets[u + 1] - offset;
-
-       storage->reconstruct(u, query_vector.data());
-       qdis.set_query(query_vector.data());
-
-       for (int i = 0; i < degree && i < k; ++i) { // rememeber && i<k
-           int neighbor_id = mirage.final_graph[offset + i];
-           if (neighbor_id != -1) {
-               I[u * k + i] = neighbor_id;
-               D[u * k + i] = qdis(neighbor_id);
-           }
-       }
-   }
-   hierarchy.init_level_0_from_knngraph(k, D.data(), I.data()); // add Layer 0
+         // Compute the distances for each neighbor.
+         for (int i = 0; i < degree && i < k; ++i) {
+             int neighbor_id = mirage.final_graph[offset + i];
+             if (neighbor_id != -1) {
+                 I[u * k + i] = neighbor_id;
+                 D[u * k + i] = (*local_qdis)(neighbor_id);
+             }
+         }
+     }
 
 
+     hierarchy.init_level_0_from_knngraph(k, D.data(), I.data()); // add Layer 0
 }
 
 void IndexMirage::add_levels(const faiss::Mirage &mirage, faiss::IndexHNSW &hierarchy, const float *x) {
